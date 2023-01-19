@@ -37,3 +37,11 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+*.Rproj
+
+# other type of files
+*.html
+sanofi.css
+
+# other directory
+output/
