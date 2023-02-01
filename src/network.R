@@ -18,10 +18,11 @@ knitr::opts_chunk$set(echo = T, comment = '',message = F, warning = F, error=F)
 options(width = 100)
 #+ libs
 library(knitr)
-library(graphsim)
+library(graphsim) #
 library("gplots")
 library("scales")
 library(igraph)
+library(DAAG) # b network sim
 
 #' # generate network gene expression data
 #' Using [grphsim](https://cran.r-project.org/web/packages/graphsim/vignettes/simulate_expression.html)
@@ -58,6 +59,8 @@ heatmap.2(expr,
 adj_mat <- make_adjmatrix_graph(graph_structure)
 print(adj_mat)
 
+
+#' # Simulate data with Bayesian networks
 
 #' <details><summary>Session Info</summary>
 sessionInfo()

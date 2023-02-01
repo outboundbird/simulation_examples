@@ -2,7 +2,9 @@ env_pkgs <- .packages(all.available = T)
 attached <- (.packages())
 req_libs <- c(
   "graphsim",
-  "logger"
+  "DAAG",
+  "logger",
+  "copula"
 )
 to_install <- req_libs[!req_libs %in% env_pkgs]
 failed_pkgs <- c()
