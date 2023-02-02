@@ -4,7 +4,9 @@ req_libs <- c(
   "graphsim",
   "DAAG",
   "logger",
-  "copula"
+  "copula",
+  "dagitty",
+  "ggdag"
 )
 to_install <- req_libs[!req_libs %in% env_pkgs]
 failed_pkgs <- c()
