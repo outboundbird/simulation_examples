@@ -36,4 +36,4 @@ prop.table(table(varA, varB))
 sessionInfo()
 #' </details>
 # Markdown --------------------------------------------------------
-# rmarkdown::render('src/demo.R', output_dir = 'output')
+# rmarkdown::render('docs/demo.R', output_dir = 'docs', output_file = "index")

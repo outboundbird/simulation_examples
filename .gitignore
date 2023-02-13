@@ -40,7 +40,7 @@ vignettes/*.pdf
 *.Rproj
 
 # other type of files
-*.html
+# *.html
 sanofi.css
 
 # other directory
