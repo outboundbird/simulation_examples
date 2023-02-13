@@ -28,24 +28,37 @@ library(lmerTest)
 #' baseline ep0 and baseline EOS count
 # simulate longitudinal data
 set.seed(123)
-n_obs <- 20
+n_obs <- 2000
 t <- rep(c(0, 1), each = n_obs)
 
 # therapy should be correlated with ics
 tab <- matrix(c(5, 3, 2, 5, 7, 8), ncol = 2) / 30
 dimnames(tab) <- list(c("mono", "double", "triple"), c("non_ICS", "ICS"))
 tab
-
 c(therapy, ics) %<-% gen_2catBy2cat(tab, n_obs, 45)
 therapy <- factor(therapy,levels = c("mono", "double", "triple"))
 ics <- factor(ics, levels=c("non_ICS", "ICS"))
 prop.table(table(therapy, ics))
 
-eos_bsl <- rbinom(n_obs, 1, 0.3) %>%
-  factor(labels = c("<300", ">=300"))
 
+u <- gen_gauss_cop(c(0.6, 0.4, 0.3), n_obs, 3)
+colnames(u) <-   c("eos", "ICS", "TRT")
+cor(u)
+plot(u[, 1], u[, 2])
+plot(u[, 1], u[, 3])
+plot(u[, 3], u[, 2])
+hist(u[,1], breaks = n_obs)
 
+eos <- unif2cat(u[,'eos'], 0.2, c(">300","<=300"))
+table(eos)
+ics <- unif2cat(u[,'ICS'], 0.6, c("ICS","non_ICS"))
+table(ics)
+trt <- unif2cat(u[,'TRT'], c(0.4, 0.2), c('mono','double','triple'))
+table(trt)
 
+df <- data.frame(eos, ics, trt)
+cat_cor(df)
+cat_cor(df, 'cramer')
 
 age <- rnorm(n_obs, 40, 10)
 
@@ -55,11 +68,12 @@ sex <- sample(c("m", "f"), n_obs,
   factor(levels = c("f", "m"))
 
 
+
 # simulate baseline endpoint
-ep0 <- 50 - 0.5 * age + as.numeric(sex) - 1.5 * as.numeric(eos_bsl) - as.numeric(ics) + 2 * as.numeric(therapy) + rnorm(n_obs, sd = 5)
+ep0 <- 50 - 0.5 * age + as.numeric(sex) - 1.5 * as.numeric(eos) - as.numeric(ics) + 2 * as.numeric(trt) + rnorm(n_obs, sd = 5)
 # mean(ep0)
 # intercept corresponds to treatment effect
-ep1 <- 50 - 0.5 * ep0 + 5 * as.numeric(eos_bsl) + rnorm(n_obs, sd = 10)
+ep1 <- 50 - 0.5 * ep0 + 5 * as.numeric(eos) + rnorm(n_obs, sd = 10)
 
 # mean(ep1)
 chg <- ep1 - ep0

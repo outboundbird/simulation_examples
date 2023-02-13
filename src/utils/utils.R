@@ -99,7 +99,7 @@ gen_2catBy2cat <- function(p_cond_tab, n, seed = 12345) {
 #'
 #' @param r a numeric vector, desired correlation coefficient(s).
 #' @param n int, number of samples to be generated.
-#' @param m, int, number of columns to be generated
+#' @param m int, number of columns to be generated. If not specified will reuse the correlation to fill the correlation matrix.
 #' @return matrix of simulated uniform distributions
 #' @examples
 #' m1 <- gen_gauss_cop(c(0.1, 0.4), 1000)
@@ -118,8 +118,7 @@ gen_gauss_cop <- function(r, n, m = NULL, seed = 123) {
   d <- nrow(P) # Dimension
   ## Generate sample
   set.seed(seed)
-  U <- pnorm(matrix(rnorm(n * d), ncol = d) %*% chol(P))
-  return(U)
+  pnorm(matrix(rnorm(n * d), ncol = d) %*% chol(P))
 }
 
 
@@ -142,6 +141,26 @@ unif2genotype <- function(x, fa) {
   as.numeric(mat) - 1
 }
 
+
+#' FUNCTION_TITLE
+#'
+#' Generate categorical data from unifrom distribution
+#'
+#' @param x vector of uniform distribution.
+#' @param f frequency, a numeric vector.
+#' @param labels labels for each category. If not specified will label with integer
+#'
+#' @return labeled or integer vector
+#' @examples
+#' table(unif2cat(runif(100), 0.6, c("A", "B")))
+unif2cat <- function(x, f, labels = NULL) {
+  if (is.null(labels)) labels <- F
+  cut(x,
+    c(cumsum(c(0, f)), 1),
+    include.lowest = T,
+    labels = labels
+  )
+}
 
 
 #' FUNCTION_TITLE
