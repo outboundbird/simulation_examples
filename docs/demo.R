@@ -32,8 +32,10 @@ c(varA, varB) %<-% gen_2catBy2cat(tab, 100)
 prop.table(table(varA, varB))
 
 #' Genrate a set of variables based on correlation structure
+#'
+#' # Generatenumeric data
 #' <details><summary>Session Info</summary>
 sessionInfo()
 #' </details>
 # Markdown --------------------------------------------------------
-# rmarkdown::render('docs/demo.R', output_dir = 'docs', output_file = "index")
+# rmarkdown::render('docs/demo.R', output_dir = 'docs')

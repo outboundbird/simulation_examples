@@ -30,11 +30,12 @@ library(lmerTest)
 set.seed(123)
 n_obs <- 20
 t <- rep(c(0, 1), each = n_obs)
+
 # therapy should be correlated with ics
 tab <- matrix(c(5, 4, 2, 5, 6, 8), ncol = 2) / 30
 dimnames(tab) <- list(c("mono", "double", "triple"), c("non_ICS", "ICS"))
 
-c(therapy, ics) %<-% gen_2catBy2cat(tab, 30)
+c(therapy, ics) %<-% gen_2catBy2cat(tab, n_obs)
 prop.table(table(therapy, ics))
 
 eos_bsl <- rbinom(n_obs, 1, 0.3) %>%
