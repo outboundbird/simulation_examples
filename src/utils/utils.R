@@ -99,15 +99,25 @@ gen_2catBy2cat <- function(p_cond_tab, n, seed = 12345) {
 #'
 #' @param r a numeric vector, desired correlation coefficient(s).
 #' @param n int, number of samples to be generated.
-#'
+#' @param m, int, number of columns to be generated
 #' @return matrix of simulated uniform distributions
 #' @examples
-#' gen_gauss_cop(c(0.1, 0.4), 1000)
-gen_gauss_cop <- function(r, n) {
+#' m1 <- gen_gauss_cop(c(0.1, 0.4), 1000)
+#' m2 <- gen_gauss_cop(c(0.1, 0.4, 0.3), 1000, 3)
+#' cor(m1)
+#' cor(m2)
+gen_gauss_cop <- function(r, n, m = NULL, seed = 123) {
   rho <- 2 * sin(r * pi / 6) # Pearson correlation
-  P <- toeplitz(c(1, rho)) # Correlation matrix
+  if(is.null(m)){
+    P <- toeplitz(c(1, rho)) # Correlation matrix
+  }else{
+    P <- matrix(1, m, m)
+    P[lower.tri(P)] <- rho
+    P[upper.tri(P)] <- t(P)[upper.tri(P)]
+  }
   d <- nrow(P) # Dimension
   ## Generate sample
+  set.seed(seed)
   U <- pnorm(matrix(rnorm(n * d), ncol = d) %*% chol(P))
   return(U)
 }
@@ -131,6 +141,7 @@ unif2genotype <- function(x, fa) {
   )
   as.numeric(mat) - 1
 }
+
 
 
 #' FUNCTION_TITLE
