@@ -32,7 +32,22 @@ c(varA, varB) %<-% gen_2catBy2cat(tab, 100)
 prop.table(table(varA, varB))
 
 #' Genrate a set of variables based on correlation structure
-#'
+# 1. generate correlated uniform vars
+df <- gen_gauss_cop(c(0.0, 0.2, 0.5), 1000)
+cor(df)
+par(mfrow = c(2, 2))
+invisible(apply(df, 2, function(x) hist(x)))
+
+# 2. generate genotype from the correlated mtx with MAF
+afs <- c(0.05, 0.1, 0.2, 0.5)
+G <- sapply(seq_len(ncol(df)), function(i) {
+  unif2genotype(df[, i], afs[i])
+}) %>%
+  data.frame() %>%
+  setNames(paste0("G", 1:ncol(df)))
+summary(G)
+cat_cor(G)
+
 #' # Generatenumeric data
 #' <details><summary>Session Info</summary>
 sessionInfo()

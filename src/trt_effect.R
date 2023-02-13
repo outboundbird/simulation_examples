@@ -32,14 +32,20 @@ n_obs <- 20
 t <- rep(c(0, 1), each = n_obs)
 
 # therapy should be correlated with ics
-tab <- matrix(c(5, 4, 2, 5, 6, 8), ncol = 2) / 30
+tab <- matrix(c(5, 3, 2, 5, 7, 8), ncol = 2) / 30
 dimnames(tab) <- list(c("mono", "double", "triple"), c("non_ICS", "ICS"))
+tab
 
-c(therapy, ics) %<-% gen_2catBy2cat(tab, n_obs)
+c(therapy, ics) %<-% gen_2catBy2cat(tab, n_obs, 45)
+therapy <- factor(therapy,levels = c("mono", "double", "triple"))
+ics <- factor(ics, levels=c("non_ICS", "ICS"))
 prop.table(table(therapy, ics))
 
 eos_bsl <- rbinom(n_obs, 1, 0.3) %>%
   factor(labels = c("<300", ">=300"))
+
+
+
 
 age <- rnorm(n_obs, 40, 10)
 
@@ -163,4 +169,4 @@ ggarrange(p1, p2, nrow = 2, ncol = 1)
 sessionInfo()
 #' </details>
 # Markdown --------------------------------------------------------
-# rmarkdown::render('src/num.R', output_dir = 'output')
+# rmarkdown::render('src/num.R', output_dir = 'docs')

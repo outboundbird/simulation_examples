@@ -54,8 +54,16 @@ gen_numBycat <- function(N, M, SD) {
   do.call(c, x)
 }
 
-# this function generate two categorical variables based on the conditional
-# probability given by a cross table.
+
+#' this function generate two categorical variables based on the conditional probability given by a cross table.
+#'
+#' @param p_cond_tab conditional probability tab.
+#' @param n number of instance to generate.
+#' @param seed seed.
+#'
+#' @return list of variables
+#' @examples
+#' see demo
 gen_2catBy2cat <- function(p_cond_tab, n, seed = 12345) {
   # probability table
   if (any(p_cond_tab > 1)) stop("Need a probability table")
@@ -83,15 +91,6 @@ gen_2catBy2cat <- function(p_cond_tab, n, seed = 12345) {
     stringr::str_extract(cond_val, "(?<=-).+")
   )
 }
-
-denote_p <- function(p) {
-  thresh <- setNames(
-    c(1, 0.1, 0.05, 0.01, 0.001, 0.0001),
-    c("ns", ".", "*", "**", "***", "****")
-  )
-  names(thresh)[max(which(p <= thresh))]
-}
-
 
 
 #' FUNCTION_TITLE
@@ -213,4 +212,12 @@ cat_cor <- function(data, method = "cc", ...) {
   diag(mtx) <- 1
   mtx[upper.tri(mtx, diag = F)] <- t(mtx)[upper.tri(t(mtx), diag = F)]
   mtx
+}
+
+denote_p <- function(p) {
+  thresh <- setNames(
+    c(1, 0.1, 0.05, 0.01, 0.001, 0.0001),
+    c("ns", ".", "*", "**", "***", "****")
+  )
+  names(thresh)[max(which(p <= thresh))]
 }
