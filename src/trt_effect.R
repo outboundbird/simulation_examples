@@ -18,28 +18,30 @@ options(width = 100)
 #+ libs
 library(knitr)
 library(dplyr)
+library(zeallot)
 library(ggpubr)
 library(jtools)
-
+library(lmerTest)
 #' # IMP effect on endpoint
 #' at baseline (t0), the endpoint (ep0) level is associated with age, sex, EOS count, ICS, therapy.
 #' at the follow-up oservational time point (t1), the endpoint (ep1) level is depended on
 #' baseline ep0 and baseline EOS count
 # simulate longitudinal data
 set.seed(123)
-n_obs <- 200
+n_obs <- 20
 t <- rep(c(0, 1), each = n_obs)
-therapy <- sample(c("mono", "double", "triple"),
-  n_obs,
-  replace = T, prob = c(0.2, 0.5, 0.3)
-) %>% factor(levels = c("mono", "double", "triple"))
+# therapy should be correlated with ics
+tab <- matrix(c(5, 4, 2, 5, 6, 8), ncol = 2) / 30
+dimnames(tab) <- list(c("mono", "double", "triple"), c("non_ICS", "ICS"))
+
+c(therapy, ics) %<-% gen_2catBy2cat(tab, 30)
+prop.table(table(therapy, ics))
 
 eos_bsl <- rbinom(n_obs, 1, 0.3) %>%
   factor(labels = c("<300", ">=300"))
 
-ics <- rbinom(n_obs, 1, 0.5) %>%
-  factor(labels = c("non-ICS", "ICS"))
 age <- rnorm(n_obs, 40, 10)
+
 sex <- sample(c("m", "f"), n_obs,
   replace = T, prob = c(0.7, 0.3)
 ) %>%
@@ -50,13 +52,13 @@ sex <- sample(c("m", "f"), n_obs,
 ep0 <- 50 - 0.5 * age + as.numeric(sex) - 1.5 * as.numeric(eos_bsl) - as.numeric(ics) + 2 * as.numeric(therapy) + rnorm(n_obs, sd = 5)
 # mean(ep0)
 # intercept corresponds to treatment effect
-ep1 <- 50 - 0.1 * ep0 + 1.5 * as.numeric(eos_bsl) + rnorm(n_obs, sd = 8)
+ep1 <- 50 - 0.5 * ep0 + 5 * as.numeric(eos_bsl) + rnorm(n_obs, sd = 10)
 
 # mean(ep1)
 chg <- ep1 - ep0
-# mean(chg)
-#+ fig.dim = c(8, 8)
-par(mfrow = c(2, 2), mar = c(4,4,1,1))
+mean(chg)
+#+ fig.dim = c(8, 6)
+par(mfrow = c(2, 3), mar = c(4,4,1,1))
 
 plot(ep0 ~ age)
 boxplot(ep0 ~ sex)
@@ -72,6 +74,7 @@ boxplot(ep0 ~ ics)
 boxplot(ep0 ~ therapy)
 
 par(mfrow = c(2, 3), mar = c(4, 4, 1, 1))
+ggboxplot(chg, add = "mean_sd")
 plot(chg ~ age)
 boxplot(chg ~ eos_bsl)
 boxplot(chg ~ sex)
@@ -79,7 +82,7 @@ boxplot(chg ~ ics)
 plot(ep0, chg)
 
 #' # endpoing value over time
-#' assuming 
+#' assuming
 #+ fig.dim = c(8,5)
 df <- data.frame(
   ep = c(ep0, ep1),
@@ -87,7 +90,9 @@ df <- data.frame(
   id = rep(1:20, 2),
   eos_bsl = rep(eos_bsl, 2) %>% factor(labels = c("<300", ">=300")),
   therapy = rep(therapy, 2) %>% as.factor(),
-  ics = rep(ics, 2)
+  ics = rep(ics, 2),
+  age = rep(age, 2),
+  sex = rep(sex, 2)
 )
 
 ggline(df, "t", "ep",
@@ -105,7 +110,10 @@ ggline(df, "t", "ep",
   facet.by = "therapy",
 )
 
+fit1 <- lmer(ep~ t + eos_bsl +(1|id), data = df)
 
+fit2 <- lmer(ep ~ t + eos_bsl + ics + therapy + age + sex + (1 | id), data = df)
+plot_summs(fit1, fit2)
 
 # from binorm to generate double gaussian dist?
 # pt with high eosinophils has better lung func under ics therapy

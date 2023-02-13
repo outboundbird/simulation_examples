@@ -31,7 +31,6 @@ gen_genotype <- function(fa, n, seed = 123) {
 }
 
 # generate numeric variable with equal variance
-# generate numeric variable with equal variance
 # using linear relationship
 gen_num_ev <- function(var, b0, b1, sd_resid, ll = NA, ul = NA) {
   # generate value assuming equal variance
