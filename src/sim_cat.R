@@ -1,7 +1,7 @@
 #' ---
 #' title: Simulating categorical variables
 #' subtitle: 'genotypes'
-#' author:  Siying Huang 
+#' author:  Siying Huang
 #' date: 'created: 2023-01-27 , updated (`r Sys.Date()`)'
 #' always_allow_html: true
 #' output:
@@ -23,7 +23,7 @@ library(igraph)
 library(graphsim)
 library(PhenotypeSimulator)
 # simulate genetic pathways
-source(file.path(here(), "src/utils.R"))
+source(file.path(here(), "src/utils/utils.R"))
 
 # generate independent genotype data
 edges <- rbind(
@@ -107,4 +107,5 @@ cat_cor(G)
 sessionInfo()
 #' </details>
 # Markdown --------------------------------------------------------
-# rmarkdown::render('src/sim_genes.R', output_dir = 'output')
+# rmarkdown::render('src/sim_cat.R', output_dir = 'output')
+
