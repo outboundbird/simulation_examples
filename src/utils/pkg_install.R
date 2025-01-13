@@ -6,7 +6,8 @@ req_libs <- c(
   "logger",
   "copula",
   "dagitty",
-  "ggdag"
+  "ggdag",
+  'simstudy'
 )
 to_install <- req_libs[!req_libs %in% env_pkgs]
 failed_pkgs <- c()

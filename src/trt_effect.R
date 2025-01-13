@@ -16,12 +16,100 @@
 knitr::opts_chunk$set(echo = T, comment = "", message = F, warning = F, error = F)
 options(width = 100)
 #+ libs
-library(knitr)
+library(here)
 library(dplyr)
 library(zeallot)
 library(ggpubr)
 library(jtools)
 library(lmerTest)
+library(ggdag)
+library(simstudy)
+source(file.path(here(),'src/utils/utils.R'))
+
+#' # Interrelationships among variables of interst
+#' ## Structure of the study
+#' The study is interested in the association between the treatment and endpoint (e.g. gene expression levels, FEV1, etc.)
+
+dag <- dagify(
+  eos ~ itep,
+  ics ~ eos,
+  t123 ~ eos,
+  y ~ eos + itep + ics + t123 + age +sex,
+  exposure = "itep",
+  outcome = "y"
+)
+
+ggdag(dag, text_size =6, node_size =18, edge_type = 'link') +
+theme_dag_gray()
+
+#' ## Open paths between variables (itep and y)
+
+ggdag_paths_fan(dag, from ='itep', to ='y', shadow = F, spread = 1) +
+  theme_dag_gray() +
+  ggplot2::theme(legend.position = "bottom")
+#+ fig.dim = c(6,8)
+ggdag_paths(dag, shadow = T) +
+  theme_dag_gray() +
+  ggplot2::theme(legend.position = "bottom")
+
+#' ## D-separation between variables
+#' direction separated
+ggdag_dseparated(dag, from = "itep", to = "y") +
+  ggplot2::theme(legend.position = "bottom")
+
+#' ## Adjustement sets
+ggdag_adjustment_set(dag, exposure = "itep", outcome = "y", shadow = T) +
+  theme_dag_grey()+
+  ggplot2::theme(legend.position = "bottom")
+
+# simulating with package
+#' At baseline , t0
+#' ```
+#' Y0 ~ age + sex + eos0
+#' Ics_0 ~ eos0
+#' T123_0 ~ eos0
+#' At t1
+#' Y1~ y0 + eos1 + x + age + sex +e
+#' X reflects drug effect on Y ~ N(a, s)
+#' eos1 ~ x +eos0
+#' Ics1 ~ eos1
+#' ```
+#' assume the mono/double/triple therapies stays the same over the treatment period.
+
+
+dstr <- defData(varname = "age", dist = "normal", formula = 40, variance = 15) %>%
+  defData("sex", dist = "binary", formula = 0.7) %>%
+  defData("eos0", dist = "binary", formula = 0.6) %>%
+  defData("y0", dist = "normal", formula = "10+age + sex -eos0") %>%
+  defData("x", dist = "normal", formula = 5, variance = 10) %>%
+  defData("ics0", dist = "binary", formula = "0.7*eos0") %>%
+  defData("t1230", dist = "nonrandom", formula = "0.7*eos0") %>%
+  defData("eos1", dist = "binary", formula = "eos0 - 0.6*x") %>%
+  defData("ics1", dist = "binary", formula = "0.7*eos1") %>%
+  defData("y1", dist = "normal", formula = "y0 - eos1 + age + sex + 0.4*x")
+
+prob_t123 <- c(0.2, 0.6, 0.2)
+df <- genData(20, dstr) %>%
+  genOrdCat(adjVar = "t1230", prob_t123, catVar = "t123")
+
+summary(df)
+lm(y0~ age+ sex + eos0, data = df)
+
+panel.cor <- function(x, y){
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- round(cor(x, y), digits=2)
+    txt <- paste0("R = ", r)
+    cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt, cex = cex.cor * r)
+}
+
+my_cols <- c("#00AFBB", "#E7B800", "#FC4E07")
+upper.panel <- function(x, y) {
+  points(x, y, pch = 19, col = my_cols[as.factor(df$eos0)])
+}
+pairs(df[,-1],  lower.panel = panel.cor, upper.panel = upper.panel)
+
 #' # IMP effect on endpoint
 #' at baseline (t0), the endpoint (ep0) level is associated with age, sex, EOS count, ICS, therapy.
 #' at the follow-up oservational time point (t1), the endpoint (ep1) level is depended on
@@ -70,6 +158,10 @@ sex <- sample(c("m", "f"), n_obs,
 
 
 # simulate baseline endpoint
+
+# mvtnorm::rmvnorm(20, sigma)
+
+
 ep0 <- 50 - 0.5 * age + as.numeric(sex) - 1.5 * as.numeric(eos) - as.numeric(ics) + 2 * as.numeric(trt) + rnorm(n_obs, sd = 5)
 # mean(ep0)
 # intercept corresponds to treatment effect
@@ -83,21 +175,21 @@ par(mfrow = c(2, 3), mar = c(4,4,1,1))
 
 plot(ep0 ~ age)
 boxplot(ep0 ~ sex)
-boxplot(ep0 ~ eos_bsl)
+boxplot(ep0 ~ eos)
 boxplot(ep0 ~ ics)
 boxplot(ep0 ~ therapy)
 
 par(mfrow = c(2, 3), mar = c(4,4,1,1))
 plot(ep0, ep1)
 boxplot(ep1 ~ sex)
-boxplot(ep1 ~ eos_bsl)
+boxplot(ep1 ~ eos)
 boxplot(ep0 ~ ics)
 boxplot(ep0 ~ therapy)
 
 par(mfrow = c(2, 3), mar = c(4, 4, 1, 1))
 ggboxplot(chg, add = "mean_sd")
 plot(chg ~ age)
-boxplot(chg ~ eos_bsl)
+boxplot(chg ~ eos)
 boxplot(chg ~ sex)
 boxplot(chg ~ ics)
 plot(ep0, chg)
@@ -109,7 +201,7 @@ df <- data.frame(
   ep = c(ep0, ep1),
   t = t,
   id = rep(1:20, 2),
-  eos_bsl = rep(eos_bsl, 2) %>% factor(labels = c("<300", ">=300")),
+  eos = rep(eos, 2) %>% factor(labels = c("<300", ">=300")),
   therapy = rep(therapy, 2) %>% as.factor(),
   ics = rep(ics, 2),
   age = rep(age, 2),
@@ -118,7 +210,7 @@ df <- data.frame(
 
 ggline(df, "t", "ep",
   group = "id",
-  facet.by = "eos_bsl",
+  facet.by = "eos",
 )
 
 ggline(df, "t", "ep",
@@ -131,9 +223,9 @@ ggline(df, "t", "ep",
   facet.by = "therapy",
 )
 
-fit1 <- lmer(ep~ t + eos_bsl +(1|id), data = df)
+fit1 <- lmer(ep~ t + eos +(1|id), data = df)
 
-fit2 <- lmer(ep ~ t + eos_bsl + ics + therapy + age + sex + (1 | id), data = df)
+fit2 <- lmer(ep ~ t + eos + ics + therapy + age + sex + (1 | id), data = df)
 plot_summs(fit1, fit2)
 
 # from binorm to generate double gaussian dist?
@@ -183,4 +275,4 @@ ggarrange(p1, p2, nrow = 2, ncol = 1)
 sessionInfo()
 #' </details>
 # Markdown --------------------------------------------------------
-# rmarkdown::render('src/num.R', output_dir = 'docs')
+# rmarkdown::render('src/trt_effect.R', output_dir = 'docs')
